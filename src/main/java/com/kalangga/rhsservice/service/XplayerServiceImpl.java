@@ -1,11 +1,13 @@
 package com.kalangga.rhsservice.service;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
 
+import org.apache.http.client.ClientProtocolException;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.kalangga.rhsservice.base.BaseResponse;
 import com.kalangga.rhsservice.entity.AgentXplayer;
 import com.kalangga.rhsservice.entity.Agents;
@@ -13,14 +15,19 @@ import com.kalangga.rhsservice.entity.Couriers;
 import com.kalangga.rhsservice.entity.CouriersXplayer;
 import com.kalangga.rhsservice.entity.Customers;
 import com.kalangga.rhsservice.entity.CustomersXplayer;
+import com.kalangga.rhsservice.entity.ShipmentNotifications;
 import com.kalangga.rhsservice.entity.repository.AgentRepository;
 import com.kalangga.rhsservice.entity.repository.AgentXplayerRepository;
 import com.kalangga.rhsservice.entity.repository.CourierRepository;
 import com.kalangga.rhsservice.entity.repository.CourierXplayerRepository;
 import com.kalangga.rhsservice.entity.repository.CustomerRepository;
 import com.kalangga.rhsservice.entity.repository.CustomerXplayerRepository;
+import com.kalangga.rhsservice.entity.repository.ShipmentNotificationRepository;
 import com.kalangga.rhsservice.enums.SourceType;
+import com.kalangga.rhsservice.payload.GeneralNotifRequest;
 import com.kalangga.rhsservice.payload.SaveXplayerRequest;
+import com.kalangga.rhsservice.payload.StatusNotifRequest;
+import com.kalangga.rhsservice.util.OneSignal;
 
 @Service
 public class XplayerServiceImpl implements XplayerService {
@@ -43,8 +50,11 @@ public class XplayerServiceImpl implements XplayerService {
 	@Autowired
 	CourierRepository courierRepository;
 
-//	@Autowired
-//	ModelMapper modelMapper;
+	@Autowired
+	ShipmentNotificationRepository shipmentNotificationRepository;
+	
+	@Autowired
+	private OneSignal oneSignal;
 
 	@Override
 	public BaseResponse saveToken(SaveXplayerRequest request) {
@@ -81,9 +91,8 @@ public class XplayerServiceImpl implements XplayerService {
 			}
 			response.sendSuccess(null, "Success");
 			return response;
-			
+
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 			response.sendBadRequest(null, "Failed insert token xplayer");
 			return response;
 		}
@@ -133,5 +142,100 @@ public class XplayerServiceImpl implements XplayerService {
 			newAgentXplayer.setCreatedAt(Instant.now());
 			agentXplayerRepository.save(newAgentXplayer);
 		}
+	}
+
+	@Override
+	public BaseResponse generalNotification(GeneralNotifRequest request) {
+		BaseResponse response = new BaseResponse();
+	
+		try {
+			if (request.getPlatform().equalsIgnoreCase(SourceType.USER_APP.toString())) {
+				Optional<Customers> cust = custRepository.findByMemberCode(request.getMessageTo());
+				if (!cust.isPresent()) {
+					response.sendNotFound(null, "Member code not found");
+					return response;
+				}
+				Optional<CustomersXplayer> custXplayer = custXplayerRepository.findByCustomer(cust.get());
+				if (custXplayer.isPresent()) {
+					oneSignal.notification(request.getTitle(), request.getContent(), custXplayer.get().getToken());
+				}
+			} else if (request.getPlatform().equalsIgnoreCase(SourceType.AGENT_APP.toString())) {
+				Optional<Agents> agen = agentRepository.findByAgentCode(request.getMessageTo());
+				if (!agen.isPresent()) {
+					response.sendNotFound(null, "Member code not found");
+					return response;
+				}
+				Optional<AgentXplayer> agentXplayer = agentXplayerRepository.findByAgent(agen.get());
+				if (agentXplayer.isPresent()) {
+					oneSignal.notification(request.getTitle(), request.getContent(), agentXplayer.get().getToken());
+				}
+
+			} else if (request.getPlatform().equalsIgnoreCase(SourceType.COURIER_APP.toString())) {
+				Optional<Couriers> courier = courierRepository.findByCode(request.getMessageTo());
+				if (!courier.isPresent()) {
+					response.sendNotFound(null, "Member code not found");
+					return response;
+				}
+				Optional<CouriersXplayer> courierXplayer = courierXplayerRepository.findByCourier(courier.get());
+				if (courierXplayer.isPresent()) {
+					oneSignal.notification(request.getTitle(), request.getContent(), courierXplayer.get().getToken());
+				}
+			}
+			response.sendSuccess(null, "Success");
+			return response;
+
+		} catch (Exception e) {
+			response.sendBadRequest(null, "Failed send general notif");
+			return response;
+		}
+	}
+
+	@Override
+	public BaseResponse statusNotification(StatusNotifRequest request) {
+		BaseResponse response = new BaseResponse();
+		
+		try {
+			if (request.getMemberCode().contains("AGN")) {
+				Optional<Customers> cust = custRepository.findByMemberCode(request.getMemberCode());
+				if (!cust.isPresent()) {
+					response.sendNotFound(null, "Member code not found");
+					return response;
+				}
+				Optional<CustomersXplayer> custXplayer = custXplayerRepository.findByCustomer(cust.get());
+				if (custXplayer.isPresent()) {
+					oneSignal.notification(request.getTitle(), request.getContent(), custXplayer.get().getToken());
+					saveShipmentNotif(request);
+				}
+
+			} else {
+				Optional<Customers> cust = custRepository.findByMemberCode(request.getMemberCode());
+				if (!cust.isPresent()) {
+					response.sendNotFound(null, "Member code not found");
+					return response;
+				}
+				Optional<CustomersXplayer> custXplayer = custXplayerRepository.findByCustomer(cust.get());
+				if (custXplayer.isPresent()) {
+					oneSignal.notification(request.getTitle(), request.getContent(), custXplayer.get().getToken());
+					saveShipmentNotif(request);
+				}
+			}
+
+			response.sendSuccess(null, "Success");
+			return response;
+
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			response.sendBadRequest(null, "Failed send status notif");
+			return response;
+		}
+	}
+
+	public void saveShipmentNotif(StatusNotifRequest request) {
+		ShipmentNotifications shipNotif = new ShipmentNotifications();
+		shipNotif.setMemberCode(request.getMemberCode());
+		shipNotif.setShipmentCode(request.getShipmentCode());
+		shipNotif.setStatus(request.getStatus());
+		shipNotif.setMessage(request.getContent());
+		shipmentNotificationRepository.save(shipNotif);
 	}
 }
