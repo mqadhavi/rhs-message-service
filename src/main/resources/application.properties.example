@@ -1,0 +1,28 @@
+
+spring.application.name=muhsinin-api
+server.port=8080
+
+spring.datasource.url=
+spring.datasource.username = 
+spring.datasource.password = 
+
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
+
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
+
+jwt.secret=
+
+#cdn config
+cdn.protocol=
+cdn.domain=
+cdn.access.key=
+cdn.secret.key= 
+cdn.bucket.name=
+
+#smsgw
+smsgw.url=
+smsgw.userid=
+smsgw.password=
+smsgw.token=
