@@ -1,11 +1,7 @@
 package com.kalangga.rhsservice.service;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
-
-import org.apache.http.client.ClientProtocolException;
-import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.kalangga.rhsservice.base.BaseResponse;
@@ -196,21 +192,21 @@ public class XplayerServiceImpl implements XplayerService {
 		
 		try {
 			if (request.getMemberCode().contains("AGN")) {
-				Optional<Customers> cust = custRepository.findByMemberCode(request.getMemberCode());
-				if (!cust.isPresent()) {
-					response.sendNotFound(null, "Member code not found");
+				Optional<Agents> agent = agentRepository.findByAgentCode(request.getMemberCode());
+				if (!agent.isPresent()) {
+					response.sendNotFound(null, "Agent not found");
 					return response;
 				}
-				Optional<CustomersXplayer> custXplayer = custXplayerRepository.findByCustomer(cust.get());
-				if (custXplayer.isPresent()) {
-					oneSignal.notification(request.getTitle(), request.getContent(), custXplayer.get().getToken());
+				Optional<AgentXplayer> agentXplayer = agentXplayerRepository.findByAgent(agent.get());
+				if (agentXplayer.isPresent()) {
+					oneSignal.notification(request.getTitle(), request.getContent(), agentXplayer.get().getToken());
 					saveShipmentNotif(request);
 				}
 
 			} else {
 				Optional<Customers> cust = custRepository.findByMemberCode(request.getMemberCode());
 				if (!cust.isPresent()) {
-					response.sendNotFound(null, "Member code not found");
+					response.sendNotFound(null, "Member not found");
 					return response;
 				}
 				Optional<CustomersXplayer> custXplayer = custXplayerRepository.findByCustomer(cust.get());
