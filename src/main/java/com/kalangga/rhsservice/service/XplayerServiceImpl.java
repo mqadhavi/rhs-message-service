@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.kalangga.rhsservice.base.BaseResponse;
+import com.kalangga.rhsservice.constant.Default;
 import com.kalangga.rhsservice.entity.AgentXplayer;
 import com.kalangga.rhsservice.entity.Agents;
 import com.kalangga.rhsservice.entity.Couriers;
@@ -191,7 +192,7 @@ public class XplayerServiceImpl implements XplayerService {
 		BaseResponse response = new BaseResponse();
 		
 		try {
-			if (request.getMemberCode().contains("AGN")) {
+			if (request.getMemberCode().contains(Default.PREFIX_AGN) || request.getMemberCode().contains(Default.PREFIX_A)) {
 				Optional<Agents> agent = agentRepository.findByAgentCode(request.getMemberCode());
 				if (!agent.isPresent()) {
 					response.sendNotFound(null, "Agent not found");
@@ -203,7 +204,7 @@ public class XplayerServiceImpl implements XplayerService {
 					saveShipmentNotif(request);
 				}
 
-			} else {
+			} else if (request.getMemberCode().contains(Default.PREFIX_CUS) || request.getMemberCode().contains(Default.PREFIX_C)) {
 				Optional<Customers> cust = custRepository.findByMemberCode(request.getMemberCode());
 				if (!cust.isPresent()) {
 					response.sendNotFound(null, "Member not found");
@@ -220,7 +221,6 @@ public class XplayerServiceImpl implements XplayerService {
 			return response;
 
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 			response.sendBadRequest(null, "Failed send status notif");
 			return response;
 		}
