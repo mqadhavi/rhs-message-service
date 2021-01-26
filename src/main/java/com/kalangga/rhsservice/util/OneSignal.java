@@ -28,7 +28,11 @@ public class OneSignal {
 	@Value("${onesignal.url}")
 	private String url;
 
-	// one signal general (no action)
+	/**
+	* 
+	* The function notification method is hit API thirtparty one signal
+	*
+	*/
 	public void notification (String title , String content, String token) throws ClientProtocolException, IOException, JSONException {
 		HttpPost charge = new HttpPost(url);
 		charge.setHeader("Content-type", MediaType.APPLICATION_JSON_VALUE);

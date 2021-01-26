@@ -52,7 +52,13 @@ public class XplayerServiceImpl implements XplayerService {
 	
 	@Autowired
 	private OneSignal oneSignal;
-
+	
+	/**
+	* 
+	* The function saveToken implements an application that
+	* save data token for agent, customer and courier/sprinter
+	*
+	*/
 	@Override
 	public BaseResponse saveToken(SaveXplayerRequest request) {
 		BaseResponse response = new BaseResponse<>();
@@ -94,6 +100,7 @@ public class XplayerServiceImpl implements XplayerService {
 			return response;
 		}
 	}
+	
 
 	public void checkingTokenCustomers(Customers cust, SaveXplayerRequest request) {
 		Optional<CustomersXplayer> custXplayer = custXplayerRepository.findByCustomer(cust);
@@ -140,7 +147,13 @@ public class XplayerServiceImpl implements XplayerService {
 			agentXplayerRepository.save(newAgentXplayer);
 		}
 	}
-
+	
+	/**
+	* 
+	* The function generalNotification implements an application that
+	* for general notification in customer, agent and courier/sprinter
+	*
+	*/
 	@Override
 	public BaseResponse generalNotification(GeneralNotifRequest request) {
 		BaseResponse response = new BaseResponse();
@@ -186,7 +199,13 @@ public class XplayerServiceImpl implements XplayerService {
 			return response;
 		}
 	}
-
+	
+	/**
+	* 
+	* The function statusNotification implements an application that
+	* for status notification when the status changed and every status will be save in notif DB
+	*
+	*/
 	@Override
 	public BaseResponse statusNotification(StatusNotifRequest request) {
 		BaseResponse response = new BaseResponse();

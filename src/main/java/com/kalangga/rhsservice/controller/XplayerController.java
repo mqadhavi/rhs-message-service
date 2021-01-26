@@ -19,19 +19,34 @@ public class XplayerController {
 
 	@Autowired
 	XplayerService xplayerService;
-
+	
+	/**
+	* 
+	* The url api for save token xplayer
+	*
+	*/
 	@PostMapping("/token")
 	public ResponseEntity<BaseResponse> createToken(@RequestBody SaveXplayerRequest request) {
 		BaseResponse response = xplayerService.saveToken(request);
 		return ResponseEntity.status(response.getHttpCode()).contentType(MediaType.APPLICATION_JSON).body(response);
 	}
-
+	
+	/**
+	* 
+	* The url api for general notification
+	*
+	*/
 	@PostMapping("/general-notification")
 	public ResponseEntity<BaseResponse> generalNotification(@RequestBody GeneralNotifRequest request) {
 		BaseResponse response = xplayerService.generalNotification(request);
 		return ResponseEntity.status(response.getHttpCode()).contentType(MediaType.APPLICATION_JSON).body(response);
 	}
-
+	
+	/**
+	* 
+	* The url api for status notification
+	*
+	*/
 	@PostMapping("/status-notification")
 	public ResponseEntity<BaseResponse> statusNotification(@RequestBody StatusNotifRequest request) {
 		BaseResponse response = xplayerService.statusNotification(request);
